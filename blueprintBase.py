@@ -12,7 +12,10 @@ class MyException(Exception): # 继承异常类
 
 class CBlueprintBase():
     def __init__(self, blueprintName):
+        # self._apiurl = "http://127.0.0.1:1108/task"
         self._apiurl = "http://hypnos.innotechx.com/task"
+        self._outputVideo = None
+        self._outputAlpha = None
 
         self._bpDesc = blueprintDesc.create(blueprintName)
         self._outputDesc = None
@@ -33,9 +36,11 @@ class CBlueprintBase():
         self._resTrackFormat1 = "##TRACK-{}-{}"
         self._resElementFormat0 = "##ELEMENT-{}-{}"
         self._resElementFormat1 = "##ELEMENT-{}-{}-{}"
+        self._resAlphaFormat0 = "##ALPHA-{}-{}"
+        self._resAlphaFormat1 = "##ALPHA-{}-{}-{}"
 
     def getResource(self, type, levelConfigDict, elementID=None, actionID=None, subType=None):
-        legalTypes = ['track', "element"]
+        legalTypes = ['track', "element", "alpha"]
         if (type not in legalTypes):
             raise MyException("resource illegal type", "type error")
         if (type=="track"):
@@ -50,6 +55,13 @@ class CBlueprintBase():
                 name = self._resElementFormat0.format(levelConfigDict['name'], subType)
             else:
                 name = self._resElementFormat1.format(levelConfigDict['name'], subType, elementID)
+        elif (type=="alpha"):
+            if (subType is None):
+                raise MyException("getResource fail", "no subType")
+            if (elementID is None):
+                name = self._resAlphaFormat0.format(levelConfigDict['name'], subType)
+            else:
+                name = self._resAlphaFormat1.format(levelConfigDict['name'], subType, elementID)
         else:
             raise MyException("getResource fail", "not supported type : %s" % type)
 
@@ -121,7 +133,7 @@ class CBlueprintBase():
         self.check_elements()
         self.check_resource()
 
-        return 'ok'
+        return self.make()
 
     def make(self):
         if (self._outputDesc is None):
@@ -156,10 +168,10 @@ class CBlueprintBase():
             level.append(actionTmpDict)
         return level
 
-    def blueprint_2_video(self, reqDict):
+    def blueprint_2_video(self):
         cburlclass = urllib.parse.urlparse(self._apiurl)
 
-        data = json.dumps(reqDict)
+        data = json.dumps(self._blueprint)
         params = bytes(data, 'utf-8')
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
         try:
@@ -169,12 +181,25 @@ class CBlueprintBase():
             # print
             # response.status, response.reason
             data = response.read()
+            print(data)
+            dataDict = json.loads(data.decode("utf-8"))
+            self._outputVideo = dataDict["data"].get("outputurl", None)
+            self._outputAlpha = dataDict['data'].get("outputAlphaurl", None)
         except Exception as ex:
+            print("error blueprint_2_video : ", str(ex))
             return 'err'
         else:
-            print(data)
+
+            print(type(data))
+
+
             conn.close()
         return 'ok'
+
+    def save_2_blueprint(self, bpFileName):
+        with open(bpFileName, "wt", encoding="utf-8") as fp:
+            json.dump(self._blueprint, fp)
+        return
 
 
 
@@ -187,7 +212,7 @@ class CSample(CBlueprintBase):
         width = 720
         height = 1280
         outputLocation = "*"
-        outputAlphaLocation = "*"
+        outputAlphaLocation = ".avi"
         fps = 25.0
         duration = 9000
         bgColor = "RGBA(0,0,0,255)"
@@ -197,7 +222,7 @@ class CSample(CBlueprintBase):
         configDict = dict()
         configDict['id'] = 0
         configDict['name'] = "effect"
-        configDict['actionNumber'] = 3
+        configDict['actionNumber'] = 2
         configDict['elementNames'] = [self._elementNameFormat.format(configDict['name'], i) for i in range(configDict['actionNumber'])]
         configDict['newlevel_func'] = self.newLevel_effect_Func
         configDict['newelement_func'] = self.newelement_effect_Func
@@ -206,7 +231,7 @@ class CSample(CBlueprintBase):
 
     def newLevel_effect_Func(self, configDict):
         levelName = configDict['name']
-        times = [(0, 3000), (3000, 6000), (8000, 8888)]
+        times = [(0, 3000), (6000, 9000)]
         baseActionDict = {
             "name": levelName,
             "element": configDict['elementNames'],
@@ -232,16 +257,18 @@ class CSample(CBlueprintBase):
 
     def fill_resource(self):
         self._resource['##bgmusic'] = "https://videofactory.oss-cn-shanghai.aliyuncs.com/ios/res/duopai/jiezoubg.mp3"
-        self._resource['##ELEMENT-effect-video'] = "https://videofactory.oss-cn-shanghai.aliyuncs.com/ios/res/duopaitest/zipaixgn.mp4"
+        self._resource['##ELEMENT-effect-video'] = "https://videofactory.oss-cn-shanghai.aliyuncs.com/ios/video/mv_4.mp4"
         self._resource['##TRACK-effect'] = "https://videofactory.oss-cn-shanghai.aliyuncs.com/ios/res/duopai/track/t1.txt"
 
 
 def main():
     bpSample = CSample()
-    bpSample.run()
-    bpDict = bpSample.make()
+    print(type(bpSample))
+    exit(0)
+    bpDict = bpSample.run()
     print(bpDict)
-    bpSample.blueprint_2_video(bpDict)
+    bpSample.blueprint_2_video()
+    # bpSample.save_2_blueprint("D:\\workroom\\testroom\\hypnos-v2\\sample//sample.json")
 
 if __name__=="__main__":
     main()
