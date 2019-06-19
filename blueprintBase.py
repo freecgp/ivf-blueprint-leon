@@ -160,7 +160,8 @@ class CBlueprintBase():
             for key in kwargs:
                 values = kwargs[key]
                 if (key in action.g_level_keyname_copy_lst):
-                    actionTmpDict[key] = values[i]
+                    if (values[i] is not None):
+                        actionTmpDict[key] = values[i]
                 elif (key in action.g_level_keyname_split_lst):
                     start, end = key.split("-")
                     actionTmpDict[start] = values[i][0]
