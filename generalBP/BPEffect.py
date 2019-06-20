@@ -3,7 +3,7 @@
 import sys
 sys.path.append("../")
 from blueprintBase import CBlueprintBase, MyException
-import outputDesc
+import outputDesc, BPThread
 
 # 演示视频
 # 输入:
@@ -82,17 +82,26 @@ def make_rotateVideo(userVideo, videoDuration, axis):
     bpDict = rotateUElement.run()
     print(bpDict)
     rotateUElement.blueprint_2_video()
-    outputVideo = rotateUElement._outputVideo
-    return outputVideo
+    outputDict = dict()
+    outputDict['outputVideo'] = rotateUElement._outputVideo
+    outputDict['outputAlpha'] = rotateUElement._outputAlpha
+    return outputDict
 
+def make_rotateVideo_asyn(userVideo, videoDuration, axis):
+    t = BPThread(make_rotateVideo, userVideo, videoDuration, axis)
+    t.setDaemon(True)
+    t.start()
+    return t
 
+def make_rotateVideo_asyn_join(t):
+    return t.join()
 
 def test_rotateEffect():
     userVideo = "https://videofactory.oss-cn-shanghai.aliyuncs.com/ios/video/mv_4.mp4"
     videoDuration = 3000
 
-    rotateVideo = make_rotateVideo(userVideo, videoDuration, "y")
-    print(rotateVideo)
+    rotateDict = make_rotateVideo(userVideo, videoDuration, "y")
+    print(rotateDict)
 
 
 if __name__=="__main__":

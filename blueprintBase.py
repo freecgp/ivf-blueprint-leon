@@ -2,7 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 import urllib, http.client
-import copy, sys, warnings, json
+import copy, sys, warnings, json, BPThread
 import blueprintDesc, element, action, hypnosConfig, outputDesc, resource
 
 class MyException(Exception): # 继承异常类
@@ -202,7 +202,25 @@ class CBlueprintBase():
             json.dump(self._blueprint, fp)
         return
 
+def make_Video(BPClass, *args):
+    print("args : ", args)
+    baseUElement = BPClass(*args)
+    bpDict = baseUElement.run()
+    print(bpDict)
+    baseUElement.blueprint_2_video()
+    outputDict = dict()
+    outputDict['outputVideo'] = baseUElement._outputVideo
+    outputDict['outputAlpha'] = baseUElement._outputAlpha
+    return outputDict
 
+def make_Video_asyn(BPClass, *args):
+    t = BPThread.BPThread(make_Video, BPClass, *args)
+    t.setDaemon(True)
+    t.start()
+    return t
+
+def make_Video_asyn_join(t):
+    return t.join()
 
 ####   A simple sample
 class CSample(CBlueprintBase):
@@ -264,8 +282,6 @@ class CSample(CBlueprintBase):
 
 def main():
     bpSample = CSample()
-    print(type(bpSample))
-    exit(0)
     bpDict = bpSample.run()
     print(bpDict)
     bpSample.blueprint_2_video()
