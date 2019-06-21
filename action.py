@@ -7,8 +7,8 @@ g_action_keynames = ["name", "projectionType", "element", "startTime", "endTime"
 
 g_level_keyname_copy_lst = ["projectionType", "element", "resizeMode", "subactions",
                    "alignPoint", "track", "transition"]
-g_level_keyname_split_lst = ["startTime-endTime", "startPos-endPos", "startScale-endScale",
-                             "startAngle-endAngle", "startAlpha-endAlpha"]
+g_level_keyname_split_lst = ["startTime_endTime", "startPos_endPos", "startScale_endScale",
+                             "startAngle_endAngle", "startAlpha_endAlpha"]
 g_level_keyname = g_level_keyname_copy_lst + g_level_keyname_split_lst
 
 

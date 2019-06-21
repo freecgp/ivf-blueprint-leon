@@ -163,7 +163,7 @@ class CBlueprintBase():
                     if (values[i] is not None):
                         actionTmpDict[key] = values[i]
                 elif (key in action.g_level_keyname_split_lst):
-                    start, end = key.split("-")
+                    start, end = key.split("_")
                     actionTmpDict[start] = values[i][0]
                     actionTmpDict[end] = values[i][1]
             level.append(actionTmpDict)
